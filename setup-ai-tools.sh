@@ -569,6 +569,105 @@ install_codex() {
     fi
 }
 
+# Install Git Worktree Scripts
+install_worktree_scripts() {
+    print_status "Checking Git Worktree Scripts..."
+    
+    local dest_dir="$HOME/.local/bin"
+    local scripts=("wtadd.sh" "wtremove.sh" "wtclone.sh")
+    local missing_scripts=()
+    
+    # Check if scripts exist
+    for script in "${scripts[@]}"; do
+        if [ ! -f "$dest_dir/$script" ]; then
+            missing_scripts+=("$script")
+        fi
+    done
+    
+    # Check if git aliases exist
+    local missing_aliases=()
+    for script in "${scripts[@]}"; do
+        local alias_name=$(basename "$script" .sh)
+        if ! git config --global --get alias.$alias_name >/dev/null 2>&1; then
+            missing_aliases+=("$alias_name")
+        fi
+    done
+    
+    if [ ${#missing_scripts[@]} -eq 0 ] && [ ${#missing_aliases[@]} -eq 0 ]; then
+        print_success "Git Worktree Scripts are already installed"
+        return 0
+    fi
+    
+    print_warning "Git Worktree Scripts are not fully installed"
+    if [ ${#missing_scripts[@]} -gt 0 ]; then
+        print_status "Missing scripts: ${missing_scripts[*]}"
+    fi
+    if [ ${#missing_aliases[@]} -gt 0 ]; then
+        print_status "Missing git aliases: ${missing_aliases[*]}"
+    fi
+    
+    if ask_yes_no "Do you want to install Git Worktree Scripts? (Enhances git workflow with bare repos)"; then
+        print_status "Installing Git Worktree Scripts..."
+        
+        # Define the repository URL and destination directory
+        local repo_url="https://github.com/tomups/worktrees-scripts.git"
+        
+        # Create the destination directory if it does not exist
+        mkdir -p "$dest_dir"
+        
+        # Clone the repository into a temporary directory
+        local temp_dir=$(mktemp -d)
+        if ! git clone "$repo_url" "$temp_dir" 2>/dev/null; then
+            print_error "Failed to clone worktree scripts repository"
+            rm -rf "$temp_dir"
+            return 1
+        fi
+        
+        # Copy the shell scripts to the destination directory
+        for script in "${scripts[@]}"; do
+            if [ -f "$temp_dir/$script" ]; then
+                cp "$temp_dir/$script" "$dest_dir/"
+                chmod +x "$dest_dir/$script"
+                print_success "Installed $script"
+            else
+                print_warning "Script $script not found in repository"
+            fi
+        done
+        
+        # Clean up the temporary directory
+        rm -rf "$temp_dir"
+        
+        # Add git aliases for each script
+        for script in "${scripts[@]}"; do
+            local script_name=$(basename "$script" .sh)
+            if [ -f "$dest_dir/$script" ]; then
+                git config --global alias.$script_name "!$dest_dir/$script"
+                print_success "Added git alias: git $script_name"
+            fi
+        done
+        
+        # Check if ~/.local/bin is in PATH
+        if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+            print_warning "$HOME/.local/bin is not in your PATH"
+            if ask_yes_no "Do you want to add $HOME/.local/bin to your PATH?"; then
+                add_to_shell_config "PATH" "\$HOME/.local/bin:\$PATH"
+                export PATH="$HOME/.local/bin:$PATH"
+                print_success "Added $HOME/.local/bin to PATH"
+            fi
+        fi
+        
+        print_success "Git Worktree Scripts installed successfully!"
+        print_status "Available commands:"
+        echo "  • git wtclone <url> [dir]  - Clone repo as bare with main worktree"
+        echo "  • git wtadd <name> [branch] - Add new worktree"
+        echo "  • git wtremove <name>      - Remove worktree and branch"
+        echo
+        print_status "More info: https://www.tomups.com/worktrees"
+        return 0
+    fi
+    return 1
+}
+
 # Setup Anthropic API key
 setup_anthropic_key() {
     if command_exists claude || npm_package_installed "@anthropic-ai/claude-code"; then
@@ -669,6 +768,7 @@ main() {
     install_claude
     install_gemini
     install_codex
+    install_worktree_scripts
 
     # Configure API keys
     echo

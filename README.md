@@ -16,6 +16,7 @@ This repository contains tools and configurations for setting up a multi-AI work
    - Install AI CLI tools (with your permission)
    - Configure API keys
    - Install tmux aliases automatically
+   - Setup tmux configuration
 
 2. **Reload your shell configuration:**
 
@@ -65,8 +66,8 @@ After setup, you can use these commands:
 - `reai` - Reconnect to the AI session
 - `ai-yolo` - Start session with two Claude instances in "yolo" mode + Terminal
 - `reai-yolo` - Reconnect to the yolo session
-- `ai-demo` - Start demo session with Claude + Gemini + Codex
-- `reai-demo` - Reconnect to the demo session
+- `ai-trinity` - Start trinity session with Claude + Gemini + Codex
+- `reai-trinity` - Reconnect to the trinity session
 
 ### Tmux Session Controls
 
@@ -115,4 +116,11 @@ echo 'export OPENAI_API_KEY="your-key-here"' >> ~/.zshrc
 **Tmux session issues:**
 
 - Install tmux if not available: `brew install tmux` (macOS) or `apt install tmux` (Linux)
-- Kill stuck sessions: `tmux kill-session -t session-name` 
+- Kill stuck sessions: `tmux kill-session -t session-name`
+
+**Alias migrations:**
+
+- The setup script automatically handles alias name changes
+- When deprecated aliases are found, you'll be prompted to migrate them
+- Old aliases can be cleaned up to avoid pollution
+- The script preserves your commands while updating alias names

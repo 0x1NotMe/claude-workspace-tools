@@ -208,6 +208,126 @@ add_alias_to_config() {
     return 0
 }
 
+# Function to handle alias migrations
+handle_alias_migrations() {
+    local config_file=$(get_shell_config)
+    
+    # Check if user has a separate aliases file
+    local alias_file=""
+    if [ -f "$HOME/.aliases" ] && grep -q "source.*\.aliases" "$config_file" 2>/dev/null; then
+        alias_file="$HOME/.aliases"
+    elif [ -f "$HOME/.alias" ] && grep -q "source.*\.alias" "$config_file" 2>/dev/null; then
+        alias_file="$HOME/.alias"
+    else
+        alias_file="$config_file"
+    fi
+    
+    # Define migration mappings: old_name:new_name
+    local migrations=(
+        "ai-demo:ai-trinity"
+        "reai-demo:reai-trinity"
+    )
+    
+    local found_deprecated=false
+    local deprecated_aliases=()
+    
+    # Check for deprecated aliases
+    for migration in "${migrations[@]}"; do
+        local old_name="${migration%:*}"
+        local new_name="${migration#*:}"
+        
+        if grep -q "^alias $old_name=" "$alias_file" 2>/dev/null; then
+            found_deprecated=true
+            deprecated_aliases+=("$old_name -> $new_name")
+        fi
+    done
+    
+    if [ "$found_deprecated" = true ]; then
+        echo
+        print_warning "Found deprecated aliases in $alias_file:"
+        for alias_info in "${deprecated_aliases[@]}"; do
+            echo "  • $alias_info"
+        done
+        echo
+        
+        if ask_yes_no "Do you want to migrate these aliases to their new names?"; then
+            for migration in "${migrations[@]}"; do
+                local old_name="${migration%:*}"
+                local new_name="${migration#*:}"
+                
+                if grep -q "^alias $old_name=" "$alias_file" 2>/dev/null; then
+                    # Replace old alias name with new name, keeping the command
+                    if [[ "$OSTYPE" == "darwin"* ]]; then
+                        # macOS
+                        sed -i '' "s/^alias $old_name=/alias $new_name=/" "$alias_file"
+                    else
+                        # Linux
+                        sed -i "s/^alias $old_name=/alias $new_name=/" "$alias_file"
+                    fi
+                    print_success "Migrated: $old_name -> $new_name"
+                fi
+            done
+            echo
+        else
+            print_status "Keeping existing aliases. Note: New aliases will be added alongside old ones."
+        fi
+    fi
+}
+
+# Function to clean up deprecated aliases
+cleanup_deprecated_aliases() {
+    local config_file=$(get_shell_config)
+    
+    # Check if user has a separate aliases file
+    local alias_file=""
+    if [ -f "$HOME/.aliases" ] && grep -q "source.*\.aliases" "$config_file" 2>/dev/null; then
+        alias_file="$HOME/.aliases"
+    elif [ -f "$HOME/.alias" ] && grep -q "source.*\.alias" "$config_file" 2>/dev/null; then
+        alias_file="$HOME/.alias"
+    else
+        alias_file="$config_file"
+    fi
+    
+    # List of deprecated aliases to remove
+    local deprecated_aliases=(
+        "ai-demo"
+        "reai-demo"
+    )
+    
+    local found_deprecated=false
+    local existing_deprecated=()
+    
+    # Check for deprecated aliases
+    for alias_name in "${deprecated_aliases[@]}"; do
+        if grep -q "^alias $alias_name=" "$alias_file" 2>/dev/null; then
+            found_deprecated=true
+            existing_deprecated+=("$alias_name")
+        fi
+    done
+    
+    if [ "$found_deprecated" = true ]; then
+        echo
+        print_warning "Found deprecated aliases that should be removed:"
+        for alias_name in "${existing_deprecated[@]}"; do
+            echo "  • $alias_name"
+        done
+        
+        if ask_yes_no "Do you want to remove these deprecated aliases?"; then
+            for alias_name in "${existing_deprecated[@]}"; do
+                if [[ "$OSTYPE" == "darwin"* ]]; then
+                    # macOS
+                    sed -i '' "/^alias $alias_name=/d" "$alias_file"
+                else
+                    # Linux
+                    sed -i "/^alias $alias_name=/d" "$alias_file"
+                fi
+                print_success "Removed deprecated alias: $alias_name"
+            done
+            echo
+        fi
+    fi
+}
+
 # Function to install tmux aliases
 install_tmux_aliases() {
     echo
@@ -240,8 +360,8 @@ install_tmux_aliases() {
         "reai"
         "ai-yolo"
         "reai-yolo"
-        "ai-demo"
-        "reai-demo"
+        "ai-trinity"
+        "reai-trinity"
     )
     
     local alias_commands=(
@@ -250,8 +370,8 @@ install_tmux_aliases() {
         'tmux attach-session -t ai-session'
         'tmux new-session -d -s ai-yolo-session \; send-keys "yolo" C-m \; split-window -h \; send-keys "yolo" C-m \; split-window -h \; send-keys "zsh" C-m \; select-layout even-horizontal \; set-option -w synchronize-panes on \; attach-session -t ai-yolo-session'
         'tmux attach-session -t ai-yolo-session'
-        'tmux new-session -d -s ai-demo-session \; send-keys "claude" C-m \; split-window -h \; send-keys "gemini" C-m \; split-window -h \; send-keys "codex" C-m \; select-layout even-horizontal \; set-option -w synchronize-panes on \; attach-session -t ai-demo-session'
-        'tmux attach-session -t ai-demo-session'
+        'tmux new-session -d -s ai-trinity-session \; send-keys "claude" C-m \; split-window -h \; send-keys "gemini" C-m \; split-window -h \; send-keys "codex" C-m \; select-layout even-horizontal \; set-option -w synchronize-panes on \; attach-session -t ai-trinity-session'
+        'tmux attach-session -t ai-trinity-session'
     )
     
     # Check which aliases exist
@@ -517,12 +637,12 @@ show_completion_message() {
     fi
     
     print_status "Available aliases:"
-    echo "  • yolo      - claude --dangerously-skip-permissions"
-    echo "  • ai        - Start AI workflow with Claude + Gemini + Terminal"
-    echo "  • reai      - Reconnect to AI session"
-    echo "  • ai-yolo   - Start AI workflow with Yolo mode"
-    echo "  • ai-demo   - Start demo session with Claude + Gemini + Codex"
-    echo "  • reai-demo - Reconnect to demo session"
+    echo "  • yolo         - claude --dangerously-skip-permissions"
+    echo "  • ai           - Start AI workflow with Claude + Gemini + Terminal"
+    echo "  • reai         - Reconnect to AI session"
+    echo "  • ai-yolo      - Start AI workflow with Yolo mode"
+    echo "  • ai-trinity   - Start trinity session with Claude + Gemini + Codex"
+    echo "  • reai-trinity - Reconnect to trinity session"
     echo
     
     # Add tmux keybinding information
@@ -562,8 +682,14 @@ main() {
     setup_google_key
     setup_openai_key
 
+    # Handle alias migrations
+    handle_alias_migrations
+
     # Install tmux aliases
     install_tmux_aliases
+
+    # Clean up deprecated aliases
+    cleanup_deprecated_aliases
 
     # Setup tmux configuration
     setup_tmux_config

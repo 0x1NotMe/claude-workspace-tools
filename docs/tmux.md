@@ -28,10 +28,23 @@ All panes are synchronized for input, and the layout is evenly distributed horiz
 To start: `ai-yolo`
 To reconnect: `reai-yolo`
 
+### `ai-trinity`
+
+Starts a new tmux session named `ai-trinity-session` with three horizontal panes:
+1.**Claude**: Runs the `claude` command.
+2.**Gemini**: Runs the `gemini` command.
+3.**Codex**: Runs the `codex` command.
+
+All panes are synchronized for input, and the layout is evenly distributed horizontally.
+
+To start: `ai-trinity`
+To reconnect: `reai-trinity`
+
 ## Reconnection Aliases
 
 - `reai`: Attaches to the `ai-session` tmux session.
 - `reai-yolo`: Attaches to the `ai-yolo-session` tmux session.
+- `reai-trinity`: Attaches to the `ai-trinity-session` tmux session.
 
 ## Keybindings for Tmux Sessions
 

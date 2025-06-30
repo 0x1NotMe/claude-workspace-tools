@@ -1,13 +1,13 @@
-# AI Workflow Tools Setup
+# Claude Workspace Tools
 
-This repository provides a comprehensive setup for a multi-AI development environment with Claude Code command extensions and synchronized tmux workflows.
+A comprehensive workspace setup for Claude Code with command extensions, multi-AI integration, and synchronized development workflows.
 
 ## 🚀 Quick Start
 
 1. **Clone and setup:**
    ```bash
    git clone <this-repo>
-   cd agent-workflows
+   cd claude-workspace-tools
    chmod +x setup-ai-tools.sh
    ./setup-ai-tools.sh
    ```
@@ -31,7 +31,7 @@ This repository provides a comprehensive setup for a multi-AI development enviro
 The setup uses a scalable extension system for Claude Code commands:
 
 ```
-agent-workflows/
+claude-workspace-tools/
 ├── extensions/                    # Command extension repositories
 │   ├── SuperClaude/              # Professional development framework (submodule)
 │   ├── claude-sessions/          # Session management system (submodule)  
@@ -374,4 +374,4 @@ This project integrates and builds upon several excellent open-source projects:
 
 **License**: MIT | **Contributions**: Welcome | **Issues**: [GitHub Issues](../../issues)
 
-**Repository Name Suggestions**: `ai-workflow-suite`, `multi-ai-dev-env`, `claude-workspace-tools`, `agentic-dev-toolkit`
+**Repository**: `claude-workspace-tools` - A comprehensive Claude Code workspace with extensions and multi-AI integration

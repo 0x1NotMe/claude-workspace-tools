@@ -1,8 +1,8 @@
-# AI Workflow System Architecture
+# Claude Workspace Tools Architecture
 
 ## Overview
 
-The AI Workflow Tools system provides a comprehensive development environment that integrates multiple AI models with specialized command extensions and synchronized workflow management.
+Claude Workspace Tools provides a comprehensive development environment that integrates Claude Code with specialized command extensions, multi-AI capabilities, and synchronized workflow management.
 
 ## System Components
 

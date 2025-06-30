@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers how to develop and integrate new command extensions with the AI Workflow Tools system.
+This guide covers how to develop and integrate new command extensions with the Claude Workspace Tools system.
 
 ## Extension Structure
 

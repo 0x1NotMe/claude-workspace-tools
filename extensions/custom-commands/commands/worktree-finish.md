@@ -23,6 +23,16 @@ git pull origin main
 git wtremove branch-name  # Removes worktree and branch
 ```
 
+### If Using Claude Code with /add-dir
+If you added the worktree using `/add-dir`, you may want to restart Claude from the main directory:
+```bash
+# Option 1: Continue in current session (worktree files no longer accessible)
+# Option 2: Restart Claude from main directory
+exit
+cd /path/to/main/project
+claude
+```
+
 ## Multiple Worktree Cleanup
 
 ```bash

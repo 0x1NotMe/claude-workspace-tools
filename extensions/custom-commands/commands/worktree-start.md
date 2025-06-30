@@ -2,6 +2,26 @@
 
 Create and set up git worktrees for focused development. Always branch from main, never merge locally.
 
+## Working with Worktrees in Claude Code
+
+After creating a worktree, you have two options to work with it in Claude Code:
+
+### Option 1: Add Worktree to Current Session
+```bash
+# Add the worktree directory to current Claude session
+/add-dir ../feature-branch-name
+```
+This keeps your current session and adds the worktree as an additional working directory.
+
+### Option 2: Restart Claude from Worktree
+```bash
+# Exit Claude and restart from the worktree directory
+exit
+cd ../feature-branch-name
+claude
+```
+This starts a fresh Claude session with the worktree as the primary working directory.
+
 ## Prerequisites
 
 ```bash

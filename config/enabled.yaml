@@ -1,1 +1,3 @@
-enabled: []
+enabled:
+  - claude-sessions
+  - custom-commands

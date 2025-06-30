@@ -754,7 +754,13 @@ show_completion_message() {
             echo "  • Claude Sessions - Session management (/project:session-start, etc.)"
         fi
         if grep -q "custom-commands" config/enabled.yaml 2>/dev/null; then
-            echo "  • Custom Commands - Workflow tools (/gemini, /worktree-*, /mermaid)"
+            local custom_count=$(count_custom_commands)
+            local custom_commands=$(get_custom_commands_list)
+            if [ "$custom_count" -gt 0 ]; then
+                echo "  • Custom Commands - Workflow tools ($custom_count commands): $custom_commands"
+            else
+                echo "  • Custom Commands - Workflow tools (0 commands)"
+            fi
         fi
         echo
     fi
@@ -932,15 +938,48 @@ install_claude_sessions() {
 }
 
 is_custom_commands_installed() {
-    # Check for custom commands
-    [ -f "$HOME/.claude/commands/gemini.md" ] && \
-    [ -f "$HOME/.claude/commands/worktree-start.md" ] && \
-    [ -f "$HOME/.claude/commands/mermaid.md" ]
+    # Check if custom commands directory exists and has any commands
+    local extension_dir="extensions/custom-commands"
+    [ -d "$extension_dir/commands" ] && [ "$(ls -A "$extension_dir/commands"/*.md 2>/dev/null | wc -l)" -gt 0 ]
+}
+
+get_custom_commands_list() {
+    local extension_dir="extensions/custom-commands"
+    local commands=()
+    
+    if [ -d "$extension_dir/commands" ]; then
+        for cmd in "$extension_dir/commands"/*.md; do
+            if [ -f "$cmd" ]; then
+                local cmd_name=$(basename "$cmd" .md)
+                commands+=("/$cmd_name")
+            fi
+        done
+    fi
+    
+    # Join array elements with ", "
+    local IFS=", "
+    echo "${commands[*]}"
+}
+
+count_custom_commands() {
+    local extension_dir="extensions/custom-commands"
+    local count=0
+    
+    if [ -d "$extension_dir/commands" ]; then
+        count=$(ls -1 "$extension_dir/commands"/*.md 2>/dev/null | wc -l)
+    fi
+    
+    echo "$count"
 }
 
 install_custom_commands() {
     if is_custom_commands_installed; then
-        print_success "Custom Commands are already installed"
+        local commands_list=$(get_custom_commands_list)
+        local count=$(count_custom_commands)
+        print_success "Custom Commands are already installed ($count commands)"
+        if [ -n "$commands_list" ]; then
+            print_status "Available commands: $commands_list"
+        fi
         # Ensure it's marked as enabled
         add_to_enabled_yaml "custom-commands"
         return 0
@@ -956,23 +995,93 @@ install_custom_commands() {
     
     # Copy command files
     if [ -d "$extension_dir/commands" ]; then
+        local installed_commands=()
         for cmd in "$extension_dir/commands"/*.md; do
             if [ -f "$cmd" ]; then
                 cp "$cmd" "$claude_dir/commands/"
+                local cmd_name=$(basename "$cmd" .md)
+                installed_commands+=("/$cmd_name")
             fi
         done
-        print_success "Custom commands installed: /gemini, /worktree-*, /parallel-worktrees, /mermaid"
+        
+        local count=${#installed_commands[@]}
+        local commands_list=$(IFS=", "; echo "${installed_commands[*]}")
+        print_success "Custom commands installed ($count commands): $commands_list"
     fi
     
     add_to_enabled_yaml "custom-commands"
     print_success "Custom Commands installed successfully!"
 }
 
+list_installed_commands() {
+    local claude_dir="$HOME/.claude/commands"
+    
+    if [ ! -d "$claude_dir" ]; then
+        print_warning "No Claude commands directory found"
+        return 1
+    fi
+    
+    print_status "📋 Installed Claude Commands:"
+    
+    # SuperClaude commands
+    local superclaude_commands=()
+    if is_superclaude_installed; then
+        # Common SuperClaude commands (can be extended)
+        local sc_commands=("build" "review" "deploy" "analyze" "test" "troubleshoot" "improve" "explain" "design" "spawn" "document" "load" "migrate" "scan" "estimate" "cleanup" "git")
+        for cmd in "${sc_commands[@]}"; do
+            if [ -f "$claude_dir/$cmd.md" ]; then
+                superclaude_commands+=("/$cmd")
+            fi
+        done
+    fi
+    
+    # Session commands
+    local session_commands=()
+    if is_claude_sessions_installed; then
+        for cmd in "$claude_dir"/session-*.md; do
+            if [ -f "$cmd" ]; then
+                local cmd_name=$(basename "$cmd" .md)
+                session_commands+=("/$cmd_name")
+            fi
+        done
+    fi
+    
+    # Custom commands
+    local custom_commands_list=$(get_custom_commands_list)
+    
+    # Display organized by extension
+    if [ ${#superclaude_commands[@]} -gt 0 ]; then
+        local sc_list=$(IFS=", "; echo "${superclaude_commands[*]}")
+        echo "  🔧 SuperClaude (${#superclaude_commands[@]}): $sc_list"
+    fi
+    
+    if [ ${#session_commands[@]} -gt 0 ]; then
+        local sess_list=$(IFS=", "; echo "${session_commands[*]}")
+        echo "  📋 Sessions (${#session_commands[@]}): $sess_list"
+    fi
+    
+    if [ -n "$custom_commands_list" ]; then
+        local custom_count=$(count_custom_commands)
+        echo "  ⚡ Custom ($custom_count): $custom_commands_list"
+    fi
+    
+    # Total count
+    local total_commands=$(ls -1 "$claude_dir"/*.md 2>/dev/null | wc -l)
+    echo "  📊 Total Commands: $total_commands"
+}
+
 list_available_extensions() {
     print_status "Available extensions:"
     echo "  • SuperClaude - Professional development framework (18 commands)"
     echo "  • claude-sessions - Advanced session management (6 commands)"
-    echo "  • custom-commands - Workflow commands: /gemini, /worktree-*, /mermaid (5 commands)"
+    
+    local custom_count=$(count_custom_commands)
+    local custom_commands=$(get_custom_commands_list)
+    if [ "$custom_count" -gt 0 ]; then
+        echo "  • custom-commands - Workflow commands ($custom_count commands): $custom_commands"
+    else
+        echo "  • custom-commands - Workflow commands (0 commands)"
+    fi
 }
 
 check_extension_status() {
@@ -1033,6 +1142,10 @@ install_selected_extensions() {
     # Clean up enabled.yaml to fix any corruption
     rebuild_enabled_yaml
     print_status "Extensions configuration cleaned up"
+    
+    # Show all installed commands
+    echo
+    list_installed_commands
 }
 
 # Main setup function

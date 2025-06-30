@@ -334,6 +334,44 @@ cd ../..
 - [Tmux Workflow Patterns](docs/tmux.md)
 - [Git Worktree Best Practices](extensions/custom-commands/commands/parallel-worktrees.md)
 
+## 🙏 Credits & Acknowledgments
+
+This project integrates and builds upon several excellent open-source projects:
+
+### **Core Extensions**
+- **[SuperClaude](https://github.com/NomenAK/SuperClaude)** by [NomenAK](https://github.com/NomenAK)
+  - Professional development framework with 18+ specialized commands
+  - Advanced Claude Code configuration and command system
+  - Evidence-based development methodology
+
+- **[Claude Sessions](https://github.com/iannuttall/claude-sessions)** by [Ian Nuttall](https://github.com/iannuttall)
+  - Advanced session management for Claude Code
+  - Development progress tracking and context preservation
+  - Session-driven development workflows
+
+### **Workflow Tools**
+- **[Git Worktree Scripts](https://github.com/tomups/worktrees-scripts)** by [tomups](https://github.com/tomups)
+  - Advanced git worktree management and automation
+  - Parallel development workflow support
+  - PR-only development process enforcement
+
+### **Additional Resources**
+- **[Mermaid Command](https://github.com/steipete/agent-rules)** by [Peter Steinberger](https://github.com/steipete)
+  - Diagram generation command for Claude Code
+  - Part of the agent-rules project for AI development
+
+### **AI CLI Tools**
+- **[Claude CLI](https://github.com/anthropics/claude-code)** by [Anthropic](https://github.com/anthropics)
+- **[Gemini CLI](https://www.npmjs.com/package/@google/gemini-cli)** by [Google](https://github.com/google)
+- **[OpenAI Codex CLI](https://platform.openai.com/)** by [OpenAI](https://github.com/openai)
+
+### **Special Thanks**
+- The Claude Code team at Anthropic for creating an extensible AI development platform
+- The open-source community for developing the tools and workflows this project builds upon
+- Contributors to tmux, git, and other foundational tools that make these workflows possible
+
 ---
 
 **License**: MIT | **Contributions**: Welcome | **Issues**: [GitHub Issues](../../issues)
+
+**Repository Name Suggestions**: `ai-workflow-suite`, `multi-ai-dev-env`, `claude-workspace-tools`, `agentic-dev-toolkit`

@@ -1,0 +1,21 @@
+extensions:
+  SuperClaude:
+    repo: "https://github.com/NomenAK/SuperClaude.git"
+    description: "Professional development framework with 18 specialized commands"
+    installer: "install.sh"
+    commands: 18
+    categories: ["development", "analysis", "operations", "design"]
+    
+  claude-sessions:
+    repo: "https://github.com/iannuttall/claude-sessions.git"
+    description: "Advanced session management for Claude with persistence and context"
+    installer: "manual"
+    commands: 6
+    categories: ["session", "management", "persistence"]
+    
+  custom-commands:
+    repo: "local"
+    description: "Custom workflow commands including Gemini integration and Git worktree workflows"
+    installer: "manual"
+    commands: 5
+    categories: ["workflow", "gemini", "git", "visualization"]

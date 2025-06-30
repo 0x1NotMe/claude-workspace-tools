@@ -1,0 +1,6 @@
+[submodule "extensions/SuperClaude"]
+	path = extensions/SuperClaude
+	url = https://github.com/NomenAK/SuperClaude.git
+[submodule "extensions/claude-sessions"]
+	path = extensions/claude-sessions
+	url = https://github.com/iannuttall/claude-sessions.git

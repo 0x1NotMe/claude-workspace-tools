@@ -744,11 +744,170 @@ show_completion_message() {
     echo "  • reai-trinity - Reconnect to trinity session"
     echo
     
+    # Show installed extensions
+    if [ -f "config/enabled.yaml" ] && [ -s "config/enabled.yaml" ]; then
+        print_status "Installed Claude Extensions:"
+        if grep -q "SuperClaude" config/enabled.yaml 2>/dev/null; then
+            echo "  • SuperClaude - 18 specialized commands (/build, /review, /deploy, etc.)"
+        fi
+        if grep -q "claude-sessions" config/enabled.yaml 2>/dev/null; then
+            echo "  • Claude Sessions - Session management (/project:session-start, etc.)"
+        fi
+        if grep -q "custom-commands" config/enabled.yaml 2>/dev/null; then
+            echo "  • Custom Commands - Workflow tools (/gemini, /worktree-*, /mermaid)"
+        fi
+        echo
+    fi
+    
     # Add tmux keybinding information
     if command_exists tmux; then
         print_status "Tmux session controls:"
         echo "  • Ctrl+s or Option+s - Toggle input synchronization"
         echo "  • Ctrl+a k          - Kill the current session"
+    fi
+}
+
+# Extension Framework Functions
+install_extension_framework() {
+    print_status "Setting up extension framework..."
+    
+    # Create directories
+    mkdir -p extensions config
+    
+    # Create extensions registry if it doesn't exist
+    if [ ! -f "config/extensions.yaml" ]; then
+        cat > config/extensions.yaml << 'EOF'
+extensions:
+  SuperClaude:
+    repo: "https://github.com/NomenAK/SuperClaude.git"
+    description: "Professional development framework with 18 specialized commands"
+    installer: "install.sh"
+    commands: 18
+    categories: ["development", "analysis", "operations", "design"]
+    
+  claude-sessions:
+    repo: "https://github.com/iannuttall/claude-sessions.git"
+    description: "Advanced session management for Claude with persistence and context"
+    installer: "manual"
+    commands: 6
+    categories: ["session", "management", "persistence"]
+EOF
+    fi
+    
+    # Create enabled extensions config
+    if [ ! -f "config/enabled.yaml" ]; then
+        echo "enabled: []" > config/enabled.yaml
+    fi
+}
+
+install_superclaude() {
+    local extension_dir="extensions/SuperClaude"
+    
+    if [ -f "$HOME/.claude/CLAUDE.md" ] && [ -d "$HOME/.claude/commands" ]; then
+        print_success "SuperClaude is already installed"
+        return 0
+    fi
+    
+    print_status "Installing SuperClaude framework..."
+    
+    if [ -d "$extension_dir" ]; then
+        cd "$extension_dir"
+        if [ -f "install.sh" ]; then
+            ./install.sh --force
+            print_success "SuperClaude installed successfully"
+            echo "  - SuperClaude" >> ../../config/enabled.yaml
+        else
+            print_error "SuperClaude installer not found"
+        fi
+        cd ../..
+    else
+        print_error "SuperClaude extension directory not found"
+    fi
+}
+
+install_claude_sessions() {
+    print_status "Setting up Claude Sessions..."
+    
+    local extension_dir="extensions/claude-sessions"
+    local claude_dir="$HOME/.claude"
+    
+    # Create Claude directories if they don't exist
+    mkdir -p "$claude_dir/commands"
+    mkdir -p "$claude_dir/sessions"
+    
+    # Copy command files and update paths
+    if [ -d "$extension_dir/commands" ]; then
+        for cmd in "$extension_dir/commands"/*.md; do
+            if [ -f "$cmd" ]; then
+                # Update paths in command files from sessions/ to .claude/sessions/
+                sed 's|sessions/|.claude/sessions/|g' "$cmd" > "$claude_dir/commands/$(basename "$cmd")"
+            fi
+        done
+        print_success "Claude Sessions commands installed"
+    fi
+    
+    # Create session tracking file
+    touch "$claude_dir/sessions/.current-session"
+    
+    # Optional: Add sessions/ to .gitignore
+    if ask_yes_no "Add sessions to .gitignore for privacy?"; then
+        echo ".claude/sessions/" >> .gitignore 2>/dev/null || true
+    fi
+    
+    echo "  - claude-sessions" >> config/enabled.yaml
+    print_success "Claude Sessions installed successfully!"
+}
+
+install_custom_commands() {
+    print_status "Setting up Custom Commands..."
+    
+    local extension_dir="extensions/custom-commands"
+    local claude_dir="$HOME/.claude"
+    
+    # Create Claude directories if they don't exist
+    mkdir -p "$claude_dir/commands"
+    
+    # Copy command files
+    if [ -d "$extension_dir/commands" ]; then
+        for cmd in "$extension_dir/commands"/*.md; do
+            if [ -f "$cmd" ]; then
+                cp "$cmd" "$claude_dir/commands/"
+            fi
+        done
+        print_success "Custom commands installed: /gemini, /worktree-*, /parallel-worktrees, /mermaid"
+    fi
+    
+    echo "  - custom-commands" >> config/enabled.yaml
+    print_success "Custom Commands installed successfully!"
+}
+
+list_available_extensions() {
+    print_status "Available extensions:"
+    echo "  • SuperClaude - Professional development framework (18 commands)"
+    echo "  • claude-sessions - Advanced session management (6 commands)"
+    echo "  • custom-commands - Workflow commands: /gemini, /worktree-*, /mermaid (5 commands)"
+}
+
+install_selected_extensions() {
+    echo
+    print_status "🔧 Claude Command Extensions Setup"
+    
+    install_extension_framework
+    
+    echo "Available extensions enhance Claude with specialized commands:"
+    list_available_extensions
+    echo
+    
+    if ask_yes_no "Install SuperClaude framework?"; then
+        install_superclaude
+    fi
+    
+    if ask_yes_no "Install Claude Sessions?"; then
+        install_claude_sessions  
+    fi
+    
+    if ask_yes_no "Install Custom Commands (/gemini, /worktree-*, /mermaid)?"; then
+        install_custom_commands
     fi
 }
 
@@ -769,6 +928,7 @@ main() {
     install_gemini
     install_codex
     install_worktree_scripts
+    install_selected_extensions
 
     # Configure API keys
     echo

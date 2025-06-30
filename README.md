@@ -83,6 +83,13 @@ The enhanced `setup-ai-tools.sh` script provides:
 | Anthropic Claude | `claude` | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/) |
 | Google Gemini | `gemini` | `GOOGLE_AI_API_KEY` | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) |
 | OpenAI Codex | `codex` | `OPENAI_API_KEY` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| Background Tasks | `claude` | `ENABLE_BACKGROUND_TASKS` | Set to `1` to enable enhanced processing |
+
+### 🔧 Background Tasks
+
+The setup script automatically configures `ENABLE_BACKGROUND_TASKS=1` for enhanced Claude capabilities:
+- ✅ Adds to shell config (bash/zsh/fish agnostic) for global availability
+- ✅ Prevents duplicates if already configured
 
 ## 🛠️ Available Commands
 

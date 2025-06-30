@@ -768,6 +768,53 @@ show_completion_message() {
 }
 
 # Extension Framework Functions
+rebuild_enabled_yaml() {
+    local enabled_file="config/enabled.yaml"
+    local temp_file=$(mktemp)
+    
+    # Start with clean YAML structure
+    echo "enabled:" > "$temp_file"
+    
+    # Add unique extensions from current file (if it exists) and any new ones
+    if [ -f "$enabled_file" ]; then
+        # Extract existing extensions and sort uniquely
+        grep "^  - " "$enabled_file" 2>/dev/null | sort -u >> "$temp_file" || true
+    fi
+    
+    # Replace the file
+    mv "$temp_file" "$enabled_file"
+}
+
+add_to_enabled_yaml() {
+    local extension_name="$1"
+    local enabled_file="config/enabled.yaml"
+    
+    # Check if extension is already in the file (exact match)
+    if [ -f "$enabled_file" ] && grep -q "^  - $extension_name$" "$enabled_file" 2>/dev/null; then
+        return 0  # Already exists
+    fi
+    
+    # Create or append to temp list
+    local temp_file=$(mktemp)
+    echo "enabled:" > "$temp_file"
+    
+    # Add existing extensions
+    if [ -f "$enabled_file" ]; then
+        grep "^  - " "$enabled_file" 2>/dev/null >> "$temp_file" || true
+    fi
+    
+    # Add new extension
+    echo "  - $extension_name" >> "$temp_file"
+    
+    # Sort and deduplicate, then rebuild
+    {
+        echo "enabled:"
+        grep "^  - " "$temp_file" | sort -u
+    } > "$enabled_file"
+    
+    rm -f "$temp_file"
+}
+
 install_extension_framework() {
     print_status "Setting up extension framework..."
     
@@ -800,11 +847,22 @@ EOF
     fi
 }
 
+is_superclaude_installed() {
+    # Check for SuperClaude-specific files and commands
+    [ -f "$HOME/.claude/CLAUDE.md" ] && \
+    [ -d "$HOME/.claude/commands" ] && \
+    [ -f "$HOME/.claude/commands/build.md" ] && \
+    [ -f "$HOME/.claude/commands/review.md" ] && \
+    [ -d "$HOME/.claude/shared" ]
+}
+
 install_superclaude() {
     local extension_dir="extensions/SuperClaude"
     
-    if [ -f "$HOME/.claude/CLAUDE.md" ] && [ -d "$HOME/.claude/commands" ]; then
+    if is_superclaude_installed; then
         print_success "SuperClaude is already installed"
+        # Ensure it's marked as enabled
+        add_to_enabled_yaml "SuperClaude"
         return 0
     fi
     
@@ -815,7 +873,8 @@ install_superclaude() {
         if [ -f "install.sh" ]; then
             ./install.sh --force
             print_success "SuperClaude installed successfully"
-            echo "  - SuperClaude" >> ../../config/enabled.yaml
+            cd ../..
+            add_to_enabled_yaml "SuperClaude"
         else
             print_error "SuperClaude installer not found"
         fi
@@ -825,7 +884,21 @@ install_superclaude() {
     fi
 }
 
+is_claude_sessions_installed() {
+    # Check for session-specific commands
+    [ -f "$HOME/.claude/commands/session-start.md" ] && \
+    [ -f "$HOME/.claude/commands/session-end.md" ] && \
+    [ -d "$HOME/.claude/sessions" ]
+}
+
 install_claude_sessions() {
+    if is_claude_sessions_installed; then
+        print_success "Claude Sessions is already installed"
+        # Ensure it's marked as enabled
+        add_to_enabled_yaml "claude-sessions"
+        return 0
+    fi
+    
     print_status "Setting up Claude Sessions..."
     
     local extension_dir="extensions/claude-sessions"
@@ -854,11 +927,25 @@ install_claude_sessions() {
         echo ".claude/sessions/" >> .gitignore 2>/dev/null || true
     fi
     
-    echo "  - claude-sessions" >> config/enabled.yaml
+    add_to_enabled_yaml "claude-sessions"
     print_success "Claude Sessions installed successfully!"
 }
 
+is_custom_commands_installed() {
+    # Check for custom commands
+    [ -f "$HOME/.claude/commands/gemini.md" ] && \
+    [ -f "$HOME/.claude/commands/worktree-start.md" ] && \
+    [ -f "$HOME/.claude/commands/mermaid.md" ]
+}
+
 install_custom_commands() {
+    if is_custom_commands_installed; then
+        print_success "Custom Commands are already installed"
+        # Ensure it's marked as enabled
+        add_to_enabled_yaml "custom-commands"
+        return 0
+    fi
+    
     print_status "Setting up Custom Commands..."
     
     local extension_dir="extensions/custom-commands"
@@ -877,7 +964,7 @@ install_custom_commands() {
         print_success "Custom commands installed: /gemini, /worktree-*, /parallel-worktrees, /mermaid"
     fi
     
-    echo "  - custom-commands" >> config/enabled.yaml
+    add_to_enabled_yaml "custom-commands"
     print_success "Custom Commands installed successfully!"
 }
 
@@ -888,27 +975,64 @@ list_available_extensions() {
     echo "  • custom-commands - Workflow commands: /gemini, /worktree-*, /mermaid (5 commands)"
 }
 
+check_extension_status() {
+    echo
+    print_status "🔍 Checking Extension Status"
+    
+    local superclaude_status="❌ Not installed"
+    local sessions_status="❌ Not installed"  
+    local custom_status="❌ Not installed"
+    
+    if is_superclaude_installed; then
+        superclaude_status="✅ Installed"
+    fi
+    
+    if is_claude_sessions_installed; then
+        sessions_status="✅ Installed"
+    fi
+    
+    if is_custom_commands_installed; then
+        custom_status="✅ Installed"
+    fi
+    
+    echo "  • SuperClaude:      $superclaude_status"
+    echo "  • Claude Sessions:  $sessions_status"
+    echo "  • Custom Commands:  $custom_status"
+    echo
+}
+
 install_selected_extensions() {
     echo
     print_status "🔧 Claude Command Extensions Setup"
     
     install_extension_framework
+    check_extension_status
     
     echo "Available extensions enhance Claude with specialized commands:"
     list_available_extensions
     echo
     
-    if ask_yes_no "Install SuperClaude framework?"; then
+    if ! is_superclaude_installed && ask_yes_no "Install SuperClaude framework?"; then
         install_superclaude
+    elif is_superclaude_installed; then
+        install_superclaude  # Just updates enabled.yaml
     fi
     
-    if ask_yes_no "Install Claude Sessions?"; then
+    if ! is_claude_sessions_installed && ask_yes_no "Install Claude Sessions?"; then
         install_claude_sessions  
+    elif is_claude_sessions_installed; then
+        install_claude_sessions  # Just updates enabled.yaml
     fi
     
-    if ask_yes_no "Install Custom Commands (/gemini, /worktree-*, /mermaid)?"; then
+    if ! is_custom_commands_installed && ask_yes_no "Install Custom Commands (/gemini, /worktree-*, /mermaid)?"; then
         install_custom_commands
+    elif is_custom_commands_installed; then
+        install_custom_commands  # Just updates enabled.yaml
     fi
+    
+    # Clean up enabled.yaml to fix any corruption
+    rebuild_enabled_yaml
+    print_status "Extensions configuration cleaned up"
 }
 
 # Main setup function

@@ -1,3 +1,4 @@
 enabled:
   - claude-sessions
   - custom-commands
+  - SuperClaude

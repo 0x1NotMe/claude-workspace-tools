@@ -5,6 +5,7 @@ A comprehensive workspace setup for Claude Code with command extensions, multi-A
 ## 🚀 Quick Start
 
 1. **Clone and setup:**
+
    ```bash
    git clone <this-repo>
    cd claude-workspace-tools
@@ -13,11 +14,13 @@ A comprehensive workspace setup for Claude Code with command extensions, multi-A
    ```
 
 2. **Reload your shell:**
+
    ```bash
    source ~/.zshrc  # or ~/.bashrc, ~/.config/fish/config.fish
    ```
 
 3. **Start working:**
+
    ```bash
    ai          # Launch synchronized AI workflow
    claude      # Use Claude with enhanced commands
@@ -30,7 +33,7 @@ A comprehensive workspace setup for Claude Code with command extensions, multi-A
 
 The setup uses a scalable extension system for Claude Code commands:
 
-```
+```txt
 claude-workspace-tools/
 ├── extensions/                    # Command extension repositories
 │   ├── SuperClaude/              # Professional development framework (submodule)
@@ -55,18 +58,21 @@ claude-workspace-tools/
 The enhanced `setup-ai-tools.sh` script provides:
 
 ### Core AI Tools Installation
+
 - ✅ **AI CLI Tools**: Claude, Gemini, Codex (with detection of existing installations)
 - 🔑 **API Key Configuration**: Secure environment variable setup
 - 🐚 **Shell Integration**: Auto-detects zsh/bash/fish and configures appropriately
 - 📺 **Tmux Workflows**: Synchronized multi-AI sessions with custom keybindings
 
 ### Extension Framework
+
 - 🔧 **Extension Management**: Modular installation of command packages
 - 📊 **Status Detection**: Intelligent detection of existing installations
 - 🎯 **Selective Installation**: Choose which extensions to install
 - 🔄 **Configuration Sync**: Automatic enabled.yaml management
 
 ### Git Workflow Integration
+
 - 🌳 **Worktree Scripts**: Advanced parallel development workflows
 - 🔀 **PR-Only Workflow**: Enforced pull request development process
 
@@ -81,6 +87,7 @@ The enhanced `setup-ai-tools.sh` script provides:
 ## 🛠️ Available Commands
 
 ### CLI Aliases
+
 - `claude` - Enhanced Claude CLI with extensions
 - `gemini` - Gemini CLI for large codebase analysis
 - `codex` - OpenAI Codex CLI (optional)
@@ -89,6 +96,7 @@ The enhanced `setup-ai-tools.sh` script provides:
 ### Claude Code Extensions
 
 #### SuperClaude Commands (18+)
+
 Development framework with specialized commands:
 - `/build` - Universal project builder with stack templates
 - `/review` - AI-powered code review with evidence-based recommendations
@@ -100,7 +108,9 @@ Development framework with specialized commands:
 - And 11+ more specialized commands...
 
 #### Session Management Commands (6)
+
 Advanced session tracking and persistence:
+
 - `/project:session-start [name]` - Start new development session
 - `/project:session-update [notes]` - Add timestamped progress updates
 - `/project:session-end` - End session with comprehensive summary
@@ -109,7 +119,9 @@ Advanced session tracking and persistence:
 - `/project:session-help` - Display help information
 
 #### Custom Workflow Commands (5)
+
 Specialized workflow tools:
+
 - `/gemini` - Large codebase analysis using Gemini's massive context window
 - `/worktree-start` - Create and setup git worktrees for focused development
 - `/worktree-finish` - Complete development work and clean up worktrees
@@ -119,6 +131,7 @@ Specialized workflow tools:
 ### Tmux Workflow Sessions
 
 Multi-AI synchronized sessions:
+
 - `ai` - Start synchronized session with Claude + Gemini + Terminal
 - `reai` - Reconnect to the AI session
 - `ai-yolo` - Start session with two Claude instances in "yolo" mode + Terminal
@@ -127,7 +140,9 @@ Multi-AI synchronized sessions:
 - `reai-trinity` - Reconnect to the trinity session
 
 #### Tmux Session Controls
+
 Within synchronized tmux sessions:
+
 - `Ctrl+s` or `Option+s` - Toggle input synchronization
 - `Ctrl+a s` - Toggle sync using prefix key
 - `Ctrl+a k` - Kill the current session
@@ -139,6 +154,7 @@ Within synchronized tmux sessions:
 ### Adding New Extensions
 
 1. **Add to extensions.yaml:**
+
    ```yaml
    extensions:
      your-extension:
@@ -150,6 +166,7 @@ Within synchronized tmux sessions:
    ```
 
 2. **Add as submodule:**
+
    ```bash
    git submodule add https://github.com/user/claude-extension.git extensions/your-extension
    ```
@@ -158,7 +175,9 @@ Within synchronized tmux sessions:
    Add installation function and detection logic to `setup-ai-tools.sh`
 
 ### Extension Structure
+
 Each extension should provide:
+
 - Command files (`.md` format for Claude Code)
 - Installation script or manual setup instructions
 - Clear documentation of provided commands
@@ -167,6 +186,7 @@ Each extension should provide:
 ## 🌟 Advanced Workflows
 
 ### Large Codebase Analysis with Gemini
+
 ```bash
 # Analyze entire project structure
 /gemini --all_files -p "Analyze project architecture and dependencies"
@@ -179,6 +199,7 @@ Each extension should provide:
 ```
 
 ### Git Worktree Parallel Development
+
 ```bash
 # Start parallel development branches
 /parallel-worktrees feature-name  # Creates feature-name-1, feature-name-2, feature-name-3
@@ -193,6 +214,7 @@ cd feature-name-3  # Test approach 3
 ```
 
 ### Session-Driven Development
+
 ```bash
 # Start tracked development session
 /project:session-start "implement-user-auth"
@@ -207,12 +229,14 @@ cd feature-name-3  # Test approach 3
 ## 📋 Installation Options
 
 ### Full Installation (Recommended)
+
 ```bash
 ./setup-ai-tools.sh
 # Select all extensions when prompted
 ```
 
 ### Selective Installation
+
 ```bash
 ./setup-ai-tools.sh
 # Choose specific extensions:
@@ -222,6 +246,7 @@ cd feature-name-3  # Test approach 3
 ```
 
 ### Manual Installation
+
 ```bash
 # Install CLI tools only
 npm install -g @anthropic-ai/claude-code @google/gemini-cli
@@ -234,6 +259,7 @@ cd extensions/claude-sessions && # manual setup
 ## 🚨 Troubleshooting
 
 ### Command not found after installation
+
 ```bash
 # Restart terminal or reload shell
 source ~/.zshrc
@@ -244,6 +270,7 @@ echo $PATH | grep npm
 ```
 
 ### API key issues
+
 ```bash
 # Verify keys are set
 echo $ANTHROPIC_API_KEY
@@ -254,6 +281,7 @@ echo $GOOGLE_AI_API_KEY
 ```
 
 ### Extension installation failures
+
 ```bash
 # Check submodule status
 git submodule status
@@ -266,6 +294,7 @@ ls -la ~/.claude/commands/
 ```
 
 ### Tmux session issues
+
 ```bash
 # Install tmux if missing
 brew install tmux        # macOS
@@ -277,6 +306,7 @@ tmux list-sessions
 ```
 
 ### YAML configuration corruption
+
 ```bash
 # The setup script automatically fixes enabled.yaml corruption
 # If manual fix needed:
@@ -291,6 +321,7 @@ EOF
 ## 🔄 Updates and Maintenance
 
 ### Updating Extensions
+
 ```bash
 # Update all submodules
 git submodule update --remote
@@ -302,6 +333,7 @@ cd ../..
 ```
 
 ### Adding Custom Commands
+
 1. Place `.md` files in `extensions/custom-commands/commands/`
 2. Re-run setup script to install
 3. Commands become available as `/your-command`
@@ -309,6 +341,7 @@ cd ../..
 ## 🎯 Best Practices
 
 ### Development Workflow
+
 1. **Start with large codebase analysis**: Use `/gemini` to understand architecture
 2. **Create isolated worktrees**: Use `/worktree-start` for feature development
 3. **Track progress**: Use session management for complex features
@@ -316,12 +349,14 @@ cd ../..
 5. **Deploy safely**: Use `/deploy` with rollback capabilities
 
 ### Multi-AI Collaboration
+
 1. **Use synchronized sessions**: `ai` command for parallel AI consultation
 2. **Compare approaches**: Ask same question to Claude and Gemini simultaneously
 3. **Leverage strengths**: Gemini for analysis, Claude for implementation
 4. **Document decisions**: Session management tracks reasoning and outcomes
 
 ### Extension Management
+
 1. **Regular updates**: Keep extensions current with `git submodule update`
 2. **Selective enabling**: Only enable extensions you actively use
 3. **Custom extensions**: Create project-specific command extensions
@@ -339,6 +374,7 @@ cd ../..
 This project integrates and builds upon several excellent open-source projects:
 
 ### **Core Extensions**
+
 - **[SuperClaude](https://github.com/NomenAK/SuperClaude)** by [NomenAK](https://github.com/NomenAK)
   - Professional development framework with 18+ specialized commands
   - Advanced Claude Code configuration and command system
@@ -350,22 +386,26 @@ This project integrates and builds upon several excellent open-source projects:
   - Session-driven development workflows
 
 ### **Workflow Tools**
+
 - **[Git Worktree Scripts](https://github.com/tomups/worktrees-scripts)** by [tomups](https://github.com/tomups)
   - Advanced git worktree management and automation
   - Parallel development workflow support
   - PR-only development process enforcement
 
 ### **Additional Resources**
+
 - **[Mermaid Command](https://github.com/steipete/agent-rules)** by [Peter Steinberger](https://github.com/steipete)
   - Diagram generation command for Claude Code
   - Part of the agent-rules project for AI development
 
 ### **AI CLI Tools**
+
 - **[Claude CLI](https://github.com/anthropics/claude-code)** by [Anthropic](https://github.com/anthropics)
 - **[Gemini CLI](https://www.npmjs.com/package/@google/gemini-cli)** by [Google](https://github.com/google)
 - **[OpenAI Codex CLI](https://platform.openai.com/)** by [OpenAI](https://github.com/openai)
 
 ### **Special Thanks**
+
 - The Claude Code team at Anthropic for creating an extensible AI development platform
 - The open-source community for developing the tools and workflows this project builds upon
 - Contributors to tmux, git, and other foundational tools that make these workflows possible

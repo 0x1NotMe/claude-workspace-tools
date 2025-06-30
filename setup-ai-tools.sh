@@ -5,6 +5,44 @@
 
 set -e
 
+# Global force flag
+FORCE_INSTALL=false
+
+# Show usage information
+show_usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Sets up Claude, Gemini, GitHub CLI, and optionally Codex CLI tools with API keys and extensions."
+    echo ""
+    echo "Options:"
+    echo "  -f, --force    Force installation, skip all prompts and overwrite existing installations"
+    echo "  -h, --help     Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0              # Interactive installation with prompts"
+    echo "  $0 --force      # Force install everything without prompts"
+    echo "  $0 -f           # Same as --force (short form)"
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --force|-f)
+            FORCE_INSTALL=true
+            shift
+            ;;
+        --help|-h)
+            show_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_usage
+            exit 1
+            ;;
+    esac
+done
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -31,6 +69,12 @@ print_error() {
 
 # Function to ask yes/no questions
 ask_yes_no() {
+    # If force mode is enabled, always return yes
+    if [ "$FORCE_INSTALL" = true ]; then
+        echo "Force mode: automatically answering 'yes' to: $1"
+        return 0
+    fi
+    
     while true; do
         read -p "$1 (y/n): " yn
         case $yn in
@@ -569,6 +613,71 @@ install_codex() {
     fi
 }
 
+# Install GitHub CLI
+install_gh_cli() {
+    print_status "Checking GitHub CLI..."
+    if command_exists gh; then
+        print_success "GitHub CLI is already installed"
+        return 0
+    else
+        print_warning "GitHub CLI is not installed"
+        if ask_yes_no "Do you want to install GitHub CLI (gh)? (Optional)"; then
+            print_status "Installing GitHub CLI..."
+            
+            # Detect OS and use appropriate package manager
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                if command_exists brew; then
+                    brew install gh
+                    print_success "GitHub CLI installed successfully via Homebrew"
+                else
+                    print_error "Homebrew not found. Please install Homebrew first: https://brew.sh/"
+                    return 1
+                fi
+            elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+                # Linux
+                if command_exists apt-get; then
+                    # Ubuntu/Debian
+                    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+                    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+                    sudo apt update
+                    sudo apt install gh -y
+                    print_success "GitHub CLI installed successfully via apt"
+                elif command_exists yum; then
+                    # RHEL/CentOS/Fedora
+                    sudo dnf install 'dnf-command(config-manager)' -y 2>/dev/null || sudo yum install 'dnf-command(config-manager)' -y
+                    sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo 2>/dev/null || sudo yum-config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+                    sudo dnf install gh -y 2>/dev/null || sudo yum install gh -y
+                    print_success "GitHub CLI installed successfully via dnf/yum"
+                elif command_exists pacman; then
+                    # Arch Linux
+                    sudo pacman -S github-cli --noconfirm
+                    print_success "GitHub CLI installed successfully via pacman"
+                else
+                    print_error "No supported package manager found (apt, yum, pacman)"
+                    print_status "Please install GitHub CLI manually: https://github.com/cli/cli#installation"
+                    return 1
+                fi
+            else
+                print_error "Unsupported operating system: $OSTYPE"
+                print_status "Please install GitHub CLI manually: https://github.com/cli/cli#installation"
+                return 1
+            fi
+            
+            # Verify installation
+            if command_exists gh; then
+                print_success "GitHub CLI installation verified"
+                print_status "Run 'gh auth login' to authenticate with GitHub"
+                return 0
+            else
+                print_error "GitHub CLI installation failed"
+                return 1
+            fi
+        fi
+        return 1
+    fi
+}
+
 # Install Git Worktree Scripts
 install_worktree_scripts() {
     print_status "Checking Git Worktree Scripts..."
@@ -873,14 +982,18 @@ is_superclaude_installed() {
 install_superclaude() {
     local extension_dir="extensions/SuperClaude"
     
-    if is_superclaude_installed; then
+    if is_superclaude_installed && [ "$FORCE_INSTALL" != true ]; then
         print_success "SuperClaude is already installed"
         # Ensure it's marked as enabled
         add_to_enabled_yaml "SuperClaude"
         return 0
     fi
     
-    print_status "Installing SuperClaude framework..."
+    if [ "$FORCE_INSTALL" = true ] && is_superclaude_installed; then
+        print_status "Force mode: Reinstalling SuperClaude framework..."
+    else
+        print_status "Installing SuperClaude framework..."
+    fi
     
     if [ -d "$extension_dir" ]; then
         cd "$extension_dir"
@@ -906,14 +1019,18 @@ is_claude_sessions_installed() {
 }
 
 install_claude_sessions() {
-    if is_claude_sessions_installed; then
+    if is_claude_sessions_installed && [ "$FORCE_INSTALL" != true ]; then
         print_success "Claude Sessions is already installed"
         # Ensure it's marked as enabled
         add_to_enabled_yaml "claude-sessions"
         return 0
     fi
     
-    print_status "Setting up Claude Sessions..."
+    if [ "$FORCE_INSTALL" = true ] && is_claude_sessions_installed; then
+        print_status "Force mode: Reinstalling Claude Sessions..."
+    else
+        print_status "Setting up Claude Sessions..."
+    fi
     
     local extension_dir="extensions/claude-sessions"
     local claude_dir="$HOME/.claude"
@@ -981,7 +1098,7 @@ count_custom_commands() {
 }
 
 install_custom_commands() {
-    if is_custom_commands_installed; then
+    if is_custom_commands_installed && [ "$FORCE_INSTALL" != true ]; then
         local commands_list=$(get_custom_commands_list)
         local count=$(count_custom_commands)
         print_success "Custom Commands are already installed ($count commands)"
@@ -993,7 +1110,11 @@ install_custom_commands() {
         return 0
     fi
     
-    print_status "Setting up Custom Commands..."
+    if [ "$FORCE_INSTALL" = true ] && is_custom_commands_installed; then
+        print_status "Force mode: Reinstalling Custom Commands..."
+    else
+        print_status "Setting up Custom Commands..."
+    fi
     
     local extension_dir="extensions/custom-commands"
     local claude_dir="$HOME/.claude"
@@ -1129,19 +1250,19 @@ install_selected_extensions() {
     list_available_extensions
     echo
     
-    if ! is_superclaude_installed && ask_yes_no "Install SuperClaude framework?"; then
+    if [ "$FORCE_INSTALL" = true ] || (! is_superclaude_installed && ask_yes_no "Install SuperClaude framework?"); then
         install_superclaude
     elif is_superclaude_installed; then
         install_superclaude  # Just updates enabled.yaml
     fi
     
-    if ! is_claude_sessions_installed && ask_yes_no "Install Claude Sessions?"; then
+    if [ "$FORCE_INSTALL" = true ] || (! is_claude_sessions_installed && ask_yes_no "Install Claude Sessions?"); then
         install_claude_sessions  
     elif is_claude_sessions_installed; then
         install_claude_sessions  # Just updates enabled.yaml
     fi
     
-    if ! is_custom_commands_installed && ask_yes_no "Install Custom Commands (/gemini, /worktree-*, /mermaid)?"; then
+    if [ "$FORCE_INSTALL" = true ] || (! is_custom_commands_installed && ask_yes_no "Install Custom Commands (/gemini, /worktree-*, /mermaid)?"); then
         install_custom_commands
     elif is_custom_commands_installed; then
         install_custom_commands  # Just updates enabled.yaml
@@ -1159,7 +1280,10 @@ install_selected_extensions() {
 # Main setup function
 main() {
     print_status "🚀 AI Tools Setup Script"
-    echo "This script will help you set up Claude, Gemini, and optionally Codex CLI tools."
+    echo "This script will help you set up Claude, Gemini, GitHub CLI, and optionally Codex CLI tools."
+    if [ "$FORCE_INSTALL" = true ]; then
+        print_status "🔥 Force mode enabled - will overwrite existing installations without prompts"
+    fi
     echo
 
     # Check prerequisites
@@ -1172,6 +1296,7 @@ main() {
     install_claude
     install_gemini
     install_codex
+    install_gh_cli
     install_worktree_scripts
     install_selected_extensions
 

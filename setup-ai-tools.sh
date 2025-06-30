@@ -719,6 +719,14 @@ setup_openai_key() {
     fi
 }
 
+# Setup ENABLE_BACKGROUND_TASKS environment variable
+setup_background_tasks() {
+    print_status "Setting up background tasks support for enhanced Claude capabilities"
+    add_to_shell_config "ENABLE_BACKGROUND_TASKS" "1"
+    export ENABLE_BACKGROUND_TASKS="1"
+    print_success "Background tasks enabled for enhanced Claude processing"
+}
+
 # Display completion message and aliases
 show_completion_message() {
     local shell_config=$(get_shell_config)
@@ -1178,6 +1186,7 @@ main() {
     setup_anthropic_key
     setup_google_key
     setup_openai_key
+    setup_background_tasks
 
     # Handle alias migrations
     handle_alias_migrations

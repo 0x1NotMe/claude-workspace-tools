@@ -233,6 +233,87 @@ cd feature-name-3  # Test approach 3
 /project:session-end
 ```
 
+## 🧠 Planning with o3
+
+Enhance your development workflow with advanced AI planning capabilities using the Zen MCP Server.
+
+### What is Zen MCP Server?
+
+The [Zen MCP Server](https://github.com/BeehiveInnovations/zen-mcp-server) provides access to multiple AI models through Claude Code, including o3 for sophisticated planning and analysis tasks.
+
+### Quick Setup
+
+1. **Clone the Zen MCP Server:**
+
+   ```bash
+   cd /Users/gwi/01-projects/04-ai/
+   git clone https://github.com/BeehiveInnovations/zen-mcp-server.git
+   cd zen-mcp-server
+   ./run-server.sh
+   ```
+
+2. **Configure API Keys (Required):**
+
+   ```bash
+   # Copy example configuration
+   cp .env.example .env
+   
+   # Edit .env with your API keys (at least one required):
+   nano .env
+   ```
+
+   Add your API keys to the `.env` file:
+
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   OPENAI_API_KEY=your_openai_api_key_here
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
+   DEFAULT_MODEL=auto
+   ```
+
+3. **Connect to Claude Code:**
+
+   ```bash
+   # Generate configuration
+   ./run-server.sh -c
+   
+   # Add to Claude Code
+   claude mcp add zen -s user -- /Users/gwi/01-projects/04-ai/zen-mcp-server/.zen_venv/bin/python /Users/gwi/01-projects/04-ai/zen-mcp-server/server.py
+   ```
+
+### Available Planning Tools
+
+Once connected, you'll have access to advanced planning capabilities:
+
+- **`/zen:planner`** - Interactive step-by-step planning with deep thinking modes
+- **`/zen:consensus`** - Multi-model consensus for complex decisions  
+- **`/zen:thinkdeep`** - Comprehensive investigation and reasoning
+- **`/zen:chat`** - Access to o3 and other advanced models for analysis
+
+### API Key Sources
+
+| Service | API Key Location |
+|---------|------------------|
+| **OpenAI (o3, GPT-4)** | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| **Google AI (Gemini)** | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) |
+| **OpenRouter (Multiple Models)** | [openrouter.ai/keys](https://openrouter.ai/keys) |
+
+### Example Usage
+
+```bash
+# Start Claude Code and use planning tools
+claude
+
+# Interactive planning session
+/zen:planner "Plan a microservices migration for our monolith application"
+
+# Multi-model consensus
+/zen:consensus "Should we use GraphQL or REST for our new API?"
+
+# Deep analysis with o3
+/zen:chat "Analyze the architectural implications of this database schema change"
+```
+
 ## 📋 Installation Options
 
 ### Full Installation (Recommended)

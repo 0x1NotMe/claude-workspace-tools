@@ -406,6 +406,7 @@ install_tmux_aliases() {
         "reai-yolo"
         "ai-trinity"
         "reai-trinity"
+        "ai-update"
     )
     
     local alias_commands=(
@@ -416,6 +417,7 @@ install_tmux_aliases() {
         'tmux attach-session -t ai-yolo-session'
         'tmux new-session -d -s ai-trinity-session \; send-keys "claude" C-m \; split-window -h \; send-keys "gemini" C-m \; split-window -h \; send-keys "codex" C-m \; select-layout even-horizontal \; set-option -w synchronize-panes on \; attach-session -t ai-trinity-session'
         'tmux attach-session -t ai-trinity-session'
+        'npm update -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex'
     )
     
     # Check which aliases exist
@@ -859,6 +861,7 @@ show_completion_message() {
     echo "  • ai-yolo      - Start AI workflow with Yolo mode"
     echo "  • ai-trinity   - Start trinity session with Claude + Gemini + Codex"
     echo "  • reai-trinity - Reconnect to trinity session"
+    echo "  • ai-update    - Update all AI packages (Claude, Gemini, Codex)"
     echo
     
     # Show installed extensions

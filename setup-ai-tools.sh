@@ -1125,13 +1125,70 @@ install_custom_commands() {
     # Create Claude directories if they don't exist
     mkdir -p "$claude_dir/commands"
     
-    # Copy command files
+    # Check if any commands are note-related
+    local note_commands=("daily-note" "weekly-review" "monthly-summary" "quick-note")
+    local has_note_commands=false
+    
+    for note_cmd in "${note_commands[@]}"; do
+        if [ -f "$extension_dir/commands/$note_cmd.md" ]; then
+            has_note_commands=true
+            break
+        fi
+    done
+    
+    # Prompt for Obsidian vault path if note commands are present
+    local obsidian_path=""
+    if [ "$has_note_commands" = true ]; then
+        print_status "Note commands detected. These require an Obsidian vault path."
+        
+        # Default path
+        local default_path="$HOME/daily-notes"
+        
+        if [ "$FORCE_INSTALL" = true ]; then
+            obsidian_path="$default_path"
+            print_status "Force mode: Using default Obsidian vault path: $obsidian_path"
+        else
+            echo "Enter the path to your Obsidian vault for daily notes"
+            echo "(Press Enter to use default: $default_path):"
+            read -p "> " user_path
+            
+            if [ -z "$user_path" ]; then
+                obsidian_path="$default_path"
+            else
+                # Expand tilde if present
+                obsidian_path="${user_path/#\~/$HOME}"
+            fi
+        fi
+        
+        # Validate path or offer to create it
+        if [ ! -d "$obsidian_path" ]; then
+            if ask_yes_no "Directory '$obsidian_path' does not exist. Create it?"; then
+                mkdir -p "$obsidian_path"
+                print_success "Created directory: $obsidian_path"
+            fi
+        fi
+        
+        print_status "Using Obsidian vault path: $obsidian_path"
+    fi
+    
+    # Copy command files and update paths
     if [ -d "$extension_dir/commands" ]; then
         local installed_commands=()
         for cmd in "$extension_dir/commands"/*.md; do
             if [ -f "$cmd" ]; then
-                cp "$cmd" "$claude_dir/commands/"
                 local cmd_name=$(basename "$cmd" .md)
+                local dest_file="$claude_dir/commands/$cmd_name.md"
+                
+                # Check if this is a note command that needs path replacement
+                if [ -n "$obsidian_path" ] && [[ " ${note_commands[@]} " =~ " ${cmd_name} " ]]; then
+                    # Replace the placeholder with the user's path
+                    sed "s|{{OBSIDIAN_VAULT_PATH}}|$obsidian_path|g" "$cmd" > "$dest_file"
+                    print_status "Updated paths in /$cmd_name"
+                else
+                    # Regular copy for non-note commands
+                    cp "$cmd" "$dest_file"
+                fi
+                
                 installed_commands+=("/$cmd_name")
             fi
         done
@@ -1139,6 +1196,10 @@ install_custom_commands() {
         local count=${#installed_commands[@]}
         local commands_list=$(IFS=", "; echo "${installed_commands[*]}")
         print_success "Custom commands installed ($count commands): $commands_list"
+        
+        if [ -n "$obsidian_path" ] && [ "$obsidian_path" != "$HOME/daily-notes" ]; then
+            print_status "Note: Daily note commands have been configured to use: $obsidian_path"
+        fi
     fi
     
     add_to_enabled_yaml "custom-commands"

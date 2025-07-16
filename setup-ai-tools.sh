@@ -1101,16 +1101,39 @@ count_custom_commands() {
 }
 
 install_custom_commands() {
-    if is_custom_commands_installed && [ "$FORCE_INSTALL" != true ]; then
+    # Always check which commands need to be installed
+    local extension_dir="extensions/custom-commands"
+    local claude_dir="$HOME/.claude"
+    local missing_commands=()
+    
+    # Check each command file in the extension
+    if [ -d "$extension_dir/commands" ]; then
+        for cmd in "$extension_dir/commands"/*.md; do
+            if [ -f "$cmd" ]; then
+                local cmd_name=$(basename "$cmd" .md)
+                if [ ! -f "$claude_dir/commands/$cmd_name.md" ]; then
+                    missing_commands+=("$cmd_name")
+                fi
+            fi
+        done
+    fi
+    
+    # If no commands are missing and not forcing, just ensure enabled and return
+    if [ ${#missing_commands[@]} -eq 0 ] && [ "$FORCE_INSTALL" != true ]; then
         local commands_list=$(get_custom_commands_list)
         local count=$(count_custom_commands)
-        print_success "Custom Commands are already installed ($count commands)"
+        print_success "All Custom Commands are already installed ($count commands)"
         if [ -n "$commands_list" ]; then
             print_status "Available commands: $commands_list"
         fi
         # Ensure it's marked as enabled
         add_to_enabled_yaml "custom-commands"
         return 0
+    fi
+    
+    # Show what needs to be installed
+    if [ ${#missing_commands[@]} -gt 0 ]; then
+        print_status "Missing commands to install: ${missing_commands[*]}"
     fi
     
     if [ "$FORCE_INSTALL" = true ] && is_custom_commands_installed; then

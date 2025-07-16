@@ -1094,7 +1094,7 @@ count_custom_commands() {
     local count=0
     
     if [ -d "$extension_dir/commands" ]; then
-        count=$(ls -1 "$extension_dir/commands"/*.md 2>/dev/null | wc -l)
+        count=$(ls -1 "$extension_dir/commands"/*.md 2>/dev/null | wc -l | tr -d ' ')
     fi
     
     echo "$count"

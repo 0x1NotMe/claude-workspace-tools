@@ -51,7 +51,8 @@ claude-workspace-tools/
 |-----------|----------|-------------|
 | **SuperClaude** | 18+ | Professional development framework with specialized commands |
 | **claude-sessions** | 6 | Advanced session management with persistence and context |
-| **custom-commands** | 5 | Workflow tools for Gemini, Git worktrees, and visualization |
+| **custom-commands** | 2 | Workflow tools for Gemini and visualization |
+| **agents** | 3 | Specialized AI agents for deep research and code analysis |
 
 ## 📦 What the Setup Script Does
 
@@ -97,8 +98,10 @@ The setup script automatically configures `ENABLE_BACKGROUND_TASKS=1` for enhanc
 
 - `claude` - Enhanced Claude CLI with extensions
 - `gemini` - Gemini CLI for large codebase analysis
-- `codex` - OpenAI Codex CLI (optional)
+- `codex` - OpenAI Codex CLI for AI-powered development
+- `cursor-agent` - Cursor Agent for advanced GPT-5 analysis
 - `yolo` - Claude with dangerous permissions enabled
+- `cursor` - Cursor Agent with high reasoning and full access
 
 ### Claude Code Extensions
 
@@ -125,15 +128,20 @@ Advanced session tracking and persistence:
 - `/project:session-list` - List all past sessions
 - `/project:session-help` - Display help information
 
-#### Custom Workflow Commands (5)
+#### Custom Workflow Commands (2)
 
 Specialized workflow tools:
 
 - `/gemini` - Large codebase analysis using Gemini's massive context window
-- `/worktree-start` - Create and setup git worktrees for focused development
-- `/worktree-finish` - Complete development work and clean up worktrees
-- `/parallel-worktrees` - Advanced parallel development workflow setup
 - `/mermaid` - Generate Mermaid diagrams and visualizations
+
+#### AI Agents (3)
+
+Specialized agents for advanced analysis:
+
+- **agent-expert** - Creates specialized Claude Code agents with proper domain expertise
+- **gpt-5** - Deep research and complex problem-solving using GPT-5 via Cursor Agent
+- **cursor-agent** - Advanced code analysis with high reasoning effort and full model capabilities
 
 ### Tmux Workflow Sessions
 
@@ -145,6 +153,8 @@ Multi-AI synchronized sessions:
 - `reai-yolo` - Reconnect to the yolo session
 - `ai-trinity` - Start trinity session with Claude + Gemini + Codex
 - `reai-trinity` - Reconnect to the trinity session
+- `ai-quad` - Start quad session with Claude + Gemini + Codex + Cursor Agent
+- `reai-quad` - Reconnect to the quad session
 
 #### Tmux Session Controls
 
@@ -205,20 +215,52 @@ Each extension should provide:
 /gemini -p "@src/ @api/ @middleware/ Identify potential security vulnerabilities"
 ```
 
-### Git Worktree Parallel Development
+### Advanced AI Agent Usage
 
 ```bash
-# Start parallel development branches
-/parallel-worktrees feature-name  # Creates feature-name-1, feature-name-2, feature-name-3
+# Deep research with GPT-5
+Task agent-expert agent # Create specialized agents
+Task gpt-5 agent # Leverage GPT-5 for complex analysis
+Task cursor-agent agent # Use Cursor Agent with high reasoning
 
-# Work in isolated environments
-cd feature-name-1  # Test approach 1
-cd feature-name-2  # Test approach 2  
-cd feature-name-3  # Test approach 3
-
-# Finish and merge best approach via PR
-/worktree-finish   # Clean completion process
+# Direct cursor-agent usage
+cursor-agent -m gpt-5 -c model_reasoning_effort="high" -p "!t Analyze architectural patterns"
 ```
+
+## 🎯 Conductor.build - Recommended Worktree Manager (macOS)
+
+### What is Conductor?
+
+[Conductor](https://conductor.build/) is a powerful macOS application that provides:
+
+- **Visual Worktree Management**: Create, switch, and manage git worktrees with a beautiful UI
+- **Multiple Claude Sessions**: Run multiple Claude Code agents simultaneously in different worktrees
+- **Project Organization**: Keep your development organized with visual project management
+- **Quick Switching**: Instantly switch between different feature branches and experiments
+
+### Installation
+
+1. **Download Conductor**: Visit [https://conductor.build/](https://conductor.build/)
+2. **Install the macOS app**: Drag to Applications folder
+3. **Connect your repositories**: Add your projects to Conductor
+
+### Why Use Conductor?
+
+Conductor replaces the command-line worktree workflow with a superior visual experience:
+
+- ✅ **Visual Interface**: See all your worktrees at a glance
+- ✅ **Multiple Agents**: Run different Claude Code sessions per worktree
+- ✅ **Fast Switching**: Click to switch between branches instantly
+- ✅ **Resource Efficient**: Optimized for macOS with native performance
+- ✅ **Git Integration**: Full git support with visual diff and history
+
+### Workflow with Conductor
+
+1. **Create a worktree** in Conductor's UI for your feature
+2. **Open Claude Code** directly from Conductor in that worktree
+3. **Work on your feature** with isolated dependencies
+4. **Switch between worktrees** instantly via Conductor
+5. **Clean up** completed worktrees with one click
 
 ### Session-Driven Development
 

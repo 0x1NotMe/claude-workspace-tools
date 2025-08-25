@@ -406,6 +406,9 @@ install_tmux_aliases() {
         "reai-yolo"
         "ai-trinity"
         "reai-trinity"
+        "ai-quad"
+        "reai-quad"
+        "cursor"
         "ai-update"
     )
     
@@ -417,7 +420,10 @@ install_tmux_aliases() {
         'tmux attach-session -t ai-yolo-session'
         'tmux new-session -d -s ai-trinity-session \; send-keys "claude" C-m \; split-window -h \; send-keys "gemini" C-m \; split-window -h \; send-keys "codex" C-m \; select-layout even-horizontal \; set-option -w synchronize-panes on \; attach-session -t ai-trinity-session'
         'tmux attach-session -t ai-trinity-session'
-        'npm update -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex'
+        'tmux new-session -d -s ai-quad-session \; send-keys "claude" C-m \; split-window -h \; send-keys "gemini" C-m \; split-window -h \; send-keys "codex" C-m \; split-window -h \; send-keys "cursor-agent -m gpt-5" C-m \; select-layout tiled \; set-option -w synchronize-panes on \; attach-session -t ai-quad-session'
+        'tmux attach-session -t ai-quad-session'
+        'cursor-agent -m gpt-5 -c model_reasoning_effort="high" --ask-for-approval never --sandbox danger-full-access'
+        'npm update -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex && curl https://cursor.com/install -fsS | bash'
     )
     
     # Check which aliases exist
@@ -615,6 +621,24 @@ install_codex() {
     fi
 }
 
+# Install Cursor Agent
+install_cursor_agent() {
+    print_status "Checking Cursor Agent..."
+    if command_exists cursor-agent; then
+        print_success "Cursor Agent is already installed"
+        return 0
+    else
+        print_warning "Cursor Agent is not installed"
+        if ask_yes_no "Do you want to install Cursor Agent? (Optional)"; then
+            print_status "Installing Cursor Agent..."
+            curl https://cursor.com/install -fsS | bash
+            print_success "Cursor Agent installed successfully"
+            return 0
+        fi
+        return 1
+    fi
+}
+
 # Install GitHub CLI
 install_gh_cli() {
     print_status "Checking GitHub CLI..."
@@ -782,6 +806,12 @@ install_worktree_scripts() {
 # Setup Anthropic API key
 setup_anthropic_key() {
     if command_exists claude || npm_package_installed "@anthropic-ai/claude-code"; then
+        # Check if API key is already set
+        if [ -n "$ANTHROPIC_API_KEY" ]; then
+            print_success "Anthropic API key is already configured"
+            return 0
+        fi
+        
         echo
         print_status "Claude CLI requires an Anthropic API key"
         print_status "Get your API key from: https://console.anthropic.com/"
@@ -799,6 +829,12 @@ setup_anthropic_key() {
 # Setup Google AI API key
 setup_google_key() {
     if command_exists gemini || npm_package_installed "@google/gemini-cli"; then
+        # Check if API key is already set
+        if [ -n "$GOOGLE_AI_API_KEY" ]; then
+            print_success "Google AI API key is already configured"
+            return 0
+        fi
+        
         echo
         print_status "Gemini CLI requires a Google AI API key"
         print_status "Get your API key from: https://aistudio.google.com/app/apikey"
@@ -816,6 +852,12 @@ setup_google_key() {
 # Setup OpenAI API key
 setup_openai_key() {
     if command_exists codex || npm_package_installed "@openai/codex"; then
+        # Check if API key is already set
+        if [ -n "$OPENAI_API_KEY" ]; then
+            print_success "OpenAI API key is already configured"
+            return 0
+        fi
+        
         echo
         print_status "Codex CLI requires an OpenAI API key"
         print_status "Get your API key from: https://platform.openai.com/api-keys"
@@ -861,7 +903,10 @@ show_completion_message() {
     echo "  • ai-yolo      - Start AI workflow with Yolo mode"
     echo "  • ai-trinity   - Start trinity session with Claude + Gemini + Codex"
     echo "  • reai-trinity - Reconnect to trinity session"
-    echo "  • ai-update    - Update all AI packages (Claude, Gemini, Codex)"
+    echo "  • ai-quad      - Start quad session with Claude + Gemini + Codex + Cursor Agent"
+    echo "  • reai-quad    - Reconnect to quad session"
+    echo "  • cursor       - Cursor Agent with high reasoning and full access"
+    echo "  • ai-update    - Update all AI packages (Claude, Gemini, Codex, Cursor Agent)"
     echo
     
     # Show installed extensions
@@ -883,6 +928,19 @@ show_completion_message() {
             fi
         fi
         echo
+    fi
+    
+    # Show installed agents
+    if [ -d "$HOME/.claude/agents" ]; then
+        local agent_count=$(ls -1 "$HOME/.claude/agents"/*.md 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$agent_count" -gt 0 ]; then
+            print_status "Installed AI Agents:"
+            echo "  • $agent_count specialized agents available for advanced analysis"
+            echo "    - agent-expert: Creates specialized Claude Code agents"
+            echo "    - gpt-5: Deep research with GPT-5 via Cursor Agent"
+            echo "    - cursor-agent: Advanced code analysis with high reasoning"
+            echo
+        fi
     fi
     
     # Add tmux keybinding information
@@ -1229,6 +1287,80 @@ install_custom_commands() {
     print_success "Custom Commands installed successfully!"
 }
 
+# Install agents
+install_agents() {
+    print_status "Checking Agents..."
+    
+    local agents_dir="extensions/agents"
+    local claude_agents_dir="$HOME/.claude/agents"
+    
+    # Create agents directory if it doesn't exist
+    mkdir -p "$claude_agents_dir"
+    
+    # Check if agents directory exists in the repo
+    if [ ! -d "$agents_dir" ]; then
+        print_warning "No agents directory found in the repository"
+        return 1
+    fi
+    
+    # Get list of agent files
+    local agent_files=()
+    for agent_file in "$agents_dir"/*.md; do
+        if [ -f "$agent_file" ]; then
+            agent_files+=("$(basename "$agent_file")")
+        fi
+    done
+    
+    if [ ${#agent_files[@]} -eq 0 ]; then
+        print_warning "No agent files found in $agents_dir"
+        return 1
+    fi
+    
+    # Check which agents are already installed
+    local missing_agents=()
+    local existing_agents=()
+    
+    for agent in "${agent_files[@]}"; do
+        if [ -f "$claude_agents_dir/$agent" ]; then
+            existing_agents+=("$agent")
+        else
+            missing_agents+=("$agent")
+        fi
+    done
+    
+    # If all agents are installed and not forcing, just return
+    if [ ${#missing_agents[@]} -eq 0 ] && [ "$FORCE_INSTALL" != true ]; then
+        print_success "All agents are already installed (${#agent_files[@]} agents)"
+        print_status "Available agents: ${agent_files[*]%.md}"
+        return 0
+    fi
+    
+    # Show what needs to be installed
+    if [ ${#missing_agents[@]} -gt 0 ]; then
+        print_status "Missing agents to install: ${missing_agents[*]}"
+    fi
+    
+    if [ "$FORCE_INSTALL" = true ] && [ ${#existing_agents[@]} -gt 0 ]; then
+        print_status "Force mode: Reinstalling all agents..."
+    fi
+    
+    # Install agents
+    local installed_count=0
+    for agent in "${agent_files[@]}"; do
+        if [ "$FORCE_INSTALL" = true ] || [[ " ${missing_agents[@]} " =~ " ${agent} " ]]; then
+            cp "$agents_dir/$agent" "$claude_agents_dir/"
+            ((installed_count++))
+        fi
+    done
+    
+    if [ $installed_count -gt 0 ]; then
+        print_success "Installed $installed_count agents successfully"
+        print_status "Available agents: ${agent_files[*]%.md}"
+    fi
+    
+    return 0
+}
+
 list_installed_commands() {
     local claude_dir="$HOME/.claude/commands"
     
@@ -1367,7 +1499,7 @@ install_selected_extensions() {
 # Main setup function
 main() {
     print_status "🚀 AI Tools Setup Script"
-    echo "This script will help you set up Claude, Gemini, GitHub CLI, and optionally Codex CLI tools."
+    echo "This script will help you set up Claude, Gemini, GitHub CLI, and optionally Codex and Cursor Agent CLI tools."
     if [ "$FORCE_INSTALL" = true ]; then
         print_status "🔥 Force mode enabled - will overwrite existing installations without prompts"
     fi
@@ -1383,9 +1515,11 @@ main() {
     install_claude
     install_gemini
     install_codex
+    install_cursor_agent
     install_gh_cli
     install_worktree_scripts
     install_selected_extensions
+    install_agents
 
     # Configure API keys
     echo

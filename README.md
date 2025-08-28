@@ -86,6 +86,48 @@ The enhanced `setup-ai-tools.sh` script provides:
 | OpenAI Codex | `codex` | `OPENAI_API_KEY` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
 | Background Tasks | `claude` | `ENABLE_BACKGROUND_TASKS` | Set to `1` to enable enhanced processing |
 
+### 🔐 GitHub CLI Authentication & Rate Limits
+
+The GitHub CLI (`gh`) is used by Claude Code for creating pull requests and other GitHub operations. It has different rate limits based on authentication:
+
+- **Without authentication**: 60 requests/hour (very restrictive)
+- **With Personal Access Token (PAT)**: 5,000 requests/hour (recommended)
+
+#### Setting up GitHub CLI with PAT
+
+1. **Create a Personal Access Token:**
+   - Go to [github.com/settings/tokens](https://github.com/settings/tokens)
+   - Click "Generate new token (classic)"
+   - Select scopes: `repo` (full control of private repositories)
+   - Copy the generated token
+
+2. **Authenticate GitHub CLI:**
+   ```bash
+   # Authenticate using PAT (recommended for higher rate limits)
+   echo "$YOUR_PAT" | gh auth login --hostname github.com --with-token
+   
+   # Or set as environment variable
+   export GH_TOKEN="your_personal_access_token_here"
+   ```
+
+3. **Verify authentication:**
+   ```bash
+   gh auth status
+   ```
+
+#### Rate Limit Monitoring
+
+Check your current rate limit status:
+```bash
+# View current rate limits
+gh api rate_limit
+
+# Check remaining requests
+gh api rate_limit | jq '.rate.remaining'
+```
+
+⚠️ **Important**: Without proper authentication, you may encounter rate limiting errors when using commands like `gh pr create` in automated workflows.
+
 ### 🔧 Background Tasks
 
 The setup script automatically configures `ENABLE_BACKGROUND_TASKS=1` for enhanced Claude capabilities:
